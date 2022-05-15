@@ -25,3 +25,6 @@ start-services:
 
 bench:
 	cd ~/isucon6q && ./isucon6q-bench
+
+kataribe:
+	sudo cat /var/log/nginx/access.log | ./kataribe -conf kataribe.toml
