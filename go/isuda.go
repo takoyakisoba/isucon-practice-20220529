@@ -16,6 +16,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/Songmu/strrand"
 	_ "github.com/go-sql-driver/mysql"
@@ -32,6 +33,11 @@ const (
 	sessionSecret = "tonymoris"
 )
 
+type keyword struct {
+	String string
+	Link   string
+}
+
 var (
 	isutarEndpoint string
 	isupamEndpoint string
@@ -41,7 +47,9 @@ var (
 	re      *render.Render
 	store   *sessions.CookieStore
 
-	errInvalidUser = errors.New("Invalid User")
+	errInvalidUser    = errors.New("Invalid User")
+	keywordLinks      = map[string]keyword{}
+	keywordLinksMutex = sync.RWMutex{}
 )
 
 func setName(w http.ResponseWriter, r *http.Request) error {
@@ -78,6 +86,8 @@ func initializeHandler(w http.ResponseWriter, r *http.Request) {
 	resp, err := http.Get(fmt.Sprintf("%s/initialize", isutarEndpoint))
 	panicIf(err)
 	defer resp.Body.Close()
+
+	updateKeywordLinks()
 
 	re.JSON(w, http.StatusOK, map[string]string{"result": "ok"})
 }
@@ -172,6 +182,8 @@ func keywordPostHandler(w http.ResponseWriter, r *http.Request) {
 		author_id = ?, keyword = ?, description = ?, updated_at = NOW()
 	`, userID, keyword, description, userID, keyword, description)
 	panicIf(err)
+
+	updateKeywordLinks()
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
@@ -303,24 +315,22 @@ func keywordByKeywordDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	_, err = db.Exec(`DELETE FROM entry WHERE keyword = ?`, keyword)
 	panicIf(err)
+
+	updateKeywordLinks()
+
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
-	if content == "" {
-		return ""
-	}
+func updateKeywordLinks() {
+	keywordLinksMutex.Lock()
+	defer keywordLinksMutex.Unlock()
 
 	rows, err := db.Query(`
 		SELECT keyword FROM entry ORDER BY keyword_length DESC
 	`)
 	panicIf(err)
 
-	type keyword struct {
-		String string
-		Link   string
-	}
-	kwMap := map[string]keyword{}
+	keywordLinks = map[string]keyword{}
 	for rows.Next() {
 		var kw string
 		rows.Scan(&kw)
@@ -328,15 +338,24 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
 		u := baseUrl.String() + "/keyword/" + pathURIEscape(kw)
 		link := fmt.Sprintf("<a href=\"%s\">%s</a>", u, html.EscapeString(kw))
 
-		kwMap[kw] = keyword{
+		keywordLinks[kw] = keyword{
 			String: kw,
 			Link:   link,
 		}
 	}
 	rows.Close()
+}
+
+func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
+	if content == "" {
+		return ""
+	}
+
+	keywordLinksMutex.RLock()
+	defer keywordLinksMutex.RUnlock()
 
 	var replacePairs []string
-	for _, k := range kwMap {
+	for _, k := range keywordLinks {
 		replacePairs = append(replacePairs, k.String, k.Link)
 	}
 	replacer := strings.NewReplacer(replacePairs...)
@@ -439,6 +458,8 @@ func main() {
 	if isupamEndpoint == "" {
 		isupamEndpoint = "http://localhost:5050"
 	}
+
+	updateKeywordLinks()
 
 	store = sessions.NewCookieStore([]byte(sessionSecret))
 
