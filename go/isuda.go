@@ -335,7 +335,11 @@ func updateKeywordLinks() {
 		var kw string
 		rows.Scan(&kw)
 
-		u := baseUrl.String() + "/keyword/" + pathURIEscape(kw)
+		origin := ""
+		if baseUrl != nil {
+			origin = baseUrl.String()
+		}
+		u := origin + "/keyword/" + pathURIEscape(kw)
 		link := fmt.Sprintf("<a href=\"%s\">%s</a>", u, html.EscapeString(kw))
 
 		keywordLinks[kw] = keyword{
