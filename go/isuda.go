@@ -47,9 +47,10 @@ var (
 	re      *render.Render
 	store   *sessions.CookieStore
 
-	errInvalidUser    = errors.New("Invalid User")
-	keywordLinks      = map[string]keyword{}
-	keywordLinksMutex = sync.RWMutex{}
+	errInvalidUser      = errors.New("Invalid User")
+	keywordLinks        = map[string]keyword{}
+	keywordLinksMutex   = sync.RWMutex{}
+	keywordLinkReplacer *strings.Replacer
 )
 
 func setName(w http.ResponseWriter, r *http.Request) error {
@@ -348,6 +349,12 @@ func updateKeywordLinks() {
 		}
 	}
 	rows.Close()
+
+	var replacePairs []string
+	for _, k := range keywordLinks {
+		replacePairs = append(replacePairs, k.String, k.Link)
+	}
+	keywordLinkReplacer = strings.NewReplacer(replacePairs...)
 }
 
 func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
@@ -358,12 +365,7 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
 	keywordLinksMutex.RLock()
 	defer keywordLinksMutex.RUnlock()
 
-	var replacePairs []string
-	for _, k := range keywordLinks {
-		replacePairs = append(replacePairs, k.String, k.Link)
-	}
-	replacer := strings.NewReplacer(replacePairs...)
-	content = replacer.Replace(html.EscapeString(content))
+	content = keywordLinkReplacer.Replace(html.EscapeString(content))
 
 	return strings.Replace(content, "\n", "<br />\n", -1)
 }
