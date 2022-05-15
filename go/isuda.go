@@ -308,32 +308,41 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
 	if content == "" {
 		return ""
 	}
+
 	rows, err := db.Query(`
 		SELECT keyword FROM entry ORDER BY keyword_length DESC
 	`)
 	panicIf(err)
 
-	keywords := make([]string, 0, 500)
-	for rows.Next() {
-		var keyword string
-		rows.Scan(&keyword)
-		keywords = append(keywords, regexp.QuoteMeta(keyword))
+	type keyword struct {
+		String string
+		Hash   string
+		Link   string
 	}
-	rows.Close()
+	kwMap := map[string]keyword{}
+	for rows.Next() {
+		var kw string
+		rows.Scan(&kw)
 
-	re := regexp.MustCompile("(" + strings.Join(keywords, "|") + ")")
-	kw2sha := make(map[string]string)
-	content = re.ReplaceAllStringFunc(content, func(kw string) string {
-		kw2sha[kw] = "isuda_" + fmt.Sprintf("%x", sha1.Sum([]byte(kw)))
-		return kw2sha[kw]
-	})
-	content = html.EscapeString(content)
-	for kw, hash := range kw2sha {
 		u, err := r.URL.Parse(baseUrl.String() + "/keyword/" + pathURIEscape(kw))
 		panicIf(err)
 		link := fmt.Sprintf("<a href=\"%s\">%s</a>", u, html.EscapeString(kw))
-		content = strings.Replace(content, hash, link, -1)
+
+		kwMap[kw] = keyword{
+			String: kw,
+			Hash:   "isuda_" + fmt.Sprintf("%x", sha1.Sum([]byte(regexp.QuoteMeta(kw)))),
+			Link:   link,
+		}
 	}
+	rows.Close()
+
+	var replacePairs []string
+	for _, k := range kwMap {
+		replacePairs = append(replacePairs, k.String, k.Link)
+	}
+	replacer := strings.NewReplacer(replacePairs...)
+	content = replacer.Replace(html.EscapeString(content))
+
 	return strings.Replace(content, "\n", "<br />\n", -1)
 }
 
