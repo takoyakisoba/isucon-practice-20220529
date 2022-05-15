@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -316,7 +315,6 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
 
 	type keyword struct {
 		String string
-		Hash   string
 		Link   string
 	}
 	kwMap := map[string]keyword{}
@@ -330,7 +328,6 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
 
 		kwMap[kw] = keyword{
 			String: kw,
-			Hash:   "isuda_" + fmt.Sprintf("%x", sha1.Sum([]byte(regexp.QuoteMeta(kw)))),
 			Link:   link,
 		}
 	}
