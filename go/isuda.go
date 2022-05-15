@@ -325,8 +325,7 @@ func htmlify(w http.ResponseWriter, r *http.Request, content string) string {
 		var kw string
 		rows.Scan(&kw)
 
-		u, err := r.URL.Parse(baseUrl.String() + "/keyword/" + pathURIEscape(kw))
-		panicIf(err)
+		u := baseUrl.String() + "/keyword/" + pathURIEscape(kw)
 		link := fmt.Sprintf("<a href=\"%s\">%s</a>", u, html.EscapeString(kw))
 
 		kwMap[kw] = keyword{
