@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Songmu/strrand"
 	_ "github.com/go-sql-driver/mysql"
@@ -24,8 +25,9 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/unrolled/render"
 
-	"github.com/felixge/fgprof"
 	_ "net/http/pprof"
+
+	"github.com/felixge/fgprof"
 )
 
 const (
@@ -455,6 +457,10 @@ func main() {
 	}
 	db.Exec("SET SESSION sql_mode='TRADITIONAL,NO_AUTO_VALUE_ON_ZERO,ONLY_FULL_GROUP_BY'")
 	db.Exec("SET NAMES utf8mb4")
+
+	db.SetMaxIdleConns(100)
+	db.SetMaxOpenConns(100)
+	db.SetConnMaxLifetime(120 * time.Second)
 
 	isutarEndpoint = os.Getenv("ISUTAR_ORIGIN")
 	if isutarEndpoint == "" {
