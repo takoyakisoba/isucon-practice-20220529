@@ -1,10 +1,9 @@
 on:
-  label:
-    types:
-      - deploy
   push:
     branches:
       - main
+    tags:
+      - deploy
 name: run ssh
 jobs:
   run-ssh:
