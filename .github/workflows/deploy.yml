@@ -17,6 +17,6 @@ jobs:
           config: ${{ secrets.CONFIG }} 
           if_key_exists: fail
       - name: git pull
-        run: ssh isucon "cd isucon && git checkout main && git pull"
+        run: ssh isucon "cd isucon && git checkout ${{github.head_ref}} && git pull"
       - name: make gogo
         run: ssh isucon "export PATH=/home/isucon/local/go/bin:$PATH && cd isucon && make gogo"
