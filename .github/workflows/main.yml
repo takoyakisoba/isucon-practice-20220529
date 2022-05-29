@@ -1,0 +1,19 @@
+on: push
+name: run ssh
+jobs:
+  run-ssh:
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+          name: id_rsa
+          config: ${{ secrets.CONFIG }} 
+          if_key_exists: fail
+      - name: git pull
+        run: ssh isucon "cd isucon && git pull"
+      - name: make gogo
+        run: ssh isucon "export PATH=/home/isucon/local/go/bin:$PATH && cd isucon && make gogo"
