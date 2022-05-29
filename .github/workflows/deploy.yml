@@ -1,6 +1,10 @@
 on:
   pull_request:
     types: [ labeled ]
+env:
+  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+  SLACK_USERNAME: DeployBot
+  SLACK_CHANNEL: develop
 name: run ssh
 jobs:
   run-ssh:
@@ -8,6 +12,13 @@ jobs:
     if: |
       contains(github.event.label.name, 'deploy')
     steps:
+      # 成功
+      - name: Slack Notification on Start
+        if: ${{ success() }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_TITLE: Deploy Start
+          SLACK_COLOR: good
       - name: Install SSH key
         uses: shimataro/ssh-key-action@v2
         with:
@@ -20,3 +31,15 @@ jobs:
         run: ssh isucon "cd isucon && git checkout ${{github.head_ref}} && git pull"
       - name: make gogo
         run: ssh isucon "export PATH=/home/isucon/local/go/bin:$PATH && cd isucon && make gogo"
+      - name: Slack Notification on Success
+        if: ${{ success() }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_TITLE: Deploy Success
+          SLACK_COLOR: good
+      - name: Slack Notification on Failure
+        if: ${{ failure() }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_TITLE: Deploy Failure
+          SLACK_COLOR: danger
