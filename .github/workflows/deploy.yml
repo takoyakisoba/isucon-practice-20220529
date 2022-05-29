@@ -1,10 +1,12 @@
-on: push
+on:
+  pull_request:
+    types: [ labeled ]
 name: run ssh
 jobs:
   run-ssh:
     runs-on: ubuntu-latest
     if: |
-      contains(github.event.issue.labels.*.name, 'deploy')
+      contains(github.event.label.name, 'deploy')
     steps:
       - name: Install SSH key
         uses: shimataro/ssh-key-action@v2
