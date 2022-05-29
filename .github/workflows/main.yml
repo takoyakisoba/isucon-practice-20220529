@@ -9,11 +9,9 @@ jobs:
         with:
           key: ${{ secrets.SSH_KEY }}
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
-          name: id_rsa
+          name: id_isucon_rsa
           config: ${{ secrets.CONFIG }} 
           if_key_exists: fail
-      - name: debug
-        run: echo "key = ${{ secrets.SSH_KEY }}"
       - name: git pull
         run: ssh isucon "cd isucon && git pull"
       - name: make gogo
