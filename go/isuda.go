@@ -24,8 +24,9 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/unrolled/render"
 
-	"github.com/felixge/fgprof"
 	_ "net/http/pprof"
+
+	"github.com/felixge/fgprof"
 )
 
 const (
@@ -447,7 +448,7 @@ func main() {
 	}
 
 	db, err = sql.Open("mysql", fmt.Sprintf(
-		"%s:%s@tcp(%s:%d)/%s?loc=Local&parseTime=true",
+		"%s:%s@tcp(%s:%d)/%s?loc=Local&parseTime=true&interpolateParams=true",
 		user, password, host, port, dbname,
 	))
 	if err != nil {
