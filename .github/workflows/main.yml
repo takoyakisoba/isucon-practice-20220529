@@ -12,6 +12,8 @@ jobs:
           name: id_rsa
           config: ${{ secrets.CONFIG }} 
           if_key_exists: fail
+      - name: debug
+        run: echo "key = ${{ secrets.SSH_KEY }}"
       - name: git pull
         run: ssh isucon "cd isucon && git pull"
       - name: make gogo
