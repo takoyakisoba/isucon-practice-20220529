@@ -186,7 +186,7 @@ func keywordPostHandler(w http.ResponseWriter, r *http.Request) {
 	`, userID, keyword, description, userID, keyword, description)
 	panicIf(err)
 
-	updateKeywordLinks()
+	addKeywordLink(keyword)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
@@ -322,6 +322,29 @@ func keywordByKeywordDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	updateKeywordLinks()
 
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func addKeywordLink(kw string) {
+	keywordLinksMutex.Lock()
+	defer keywordLinksMutex.Unlock()
+
+	origin := ""
+	if baseUrl != nil {
+		origin = baseUrl.String()
+	}
+	u := origin + "/keyword/" + pathURIEscape(kw)
+	link := fmt.Sprintf("<a href=\"%s\">%s</a>", u, html.EscapeString(kw))
+
+	keywordLinks[kw] = keyword{
+		String: kw,
+		Link:   link,
+	}
+
+	var replacePairs []string
+	for _, k := range keywordLinks {
+		replacePairs = append(replacePairs, k.String, k.Link)
+	}
+	keywordLinkReplacer = strings.NewReplacer(replacePairs...)
 }
 
 func updateKeywordLinks() {
