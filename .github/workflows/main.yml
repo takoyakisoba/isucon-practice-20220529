@@ -1,4 +1,10 @@
-on: push
+on:
+  label:
+    types:
+      - deploy
+  push:
+    branches:
+      - main
 name: run ssh
 jobs:
   run-ssh:
@@ -13,6 +19,6 @@ jobs:
           config: ${{ secrets.CONFIG }} 
           if_key_exists: fail
       - name: git pull
-        run: ssh isucon "cd isucon && git pull"
+        run: ssh isucon "cd isucon && git checkout ${{CI_COMMIT_BRANCH}} && git pull"
       - name: make gogo
         run: ssh isucon "export PATH=/home/isucon/local/go/bin:$PATH && cd isucon && make gogo"
