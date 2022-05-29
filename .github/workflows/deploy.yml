@@ -12,12 +12,11 @@ jobs:
     if: |
       contains(github.event.label.name, 'deploy')
     steps:
-      # 成功
       - name: Slack Notification on Start
-        if: ${{ success() }}
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_TITLE: Deploy Start
+          SLACK_MESSAGE: deploy走るよ
           SLACK_COLOR: good
       - name: Install SSH key
         uses: shimataro/ssh-key-action@v2
@@ -36,10 +35,12 @@ jobs:
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_TITLE: Deploy Success
+          SLACK_MESSAGE: deploy終わったよ
           SLACK_COLOR: good
       - name: Slack Notification on Failure
         if: ${{ failure() }}
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_TITLE: Deploy Failure
+          SLACK_MESSAGE: deploy失敗したよ
           SLACK_COLOR: danger
