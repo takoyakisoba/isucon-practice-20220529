@@ -95,6 +95,10 @@ name = 'GET /keyword/[A-Z0-9%]+'
 regexp = 'POST /stars\?user=[a-z0-9]+&keyword=.*'
 name = 'POST /stars?user=[a-z0-9]+&keyword=.*'
 
+[[bundle]]
+regexp = 'GET /\?page=[0-9]+'
+name = 'GET /\?page=[0-9]+'
+
 #[[bundle]]
 #regexp = '^(GET|HEAD) /stylesheets/'
 #name = 'GET /stylesheets/*'
